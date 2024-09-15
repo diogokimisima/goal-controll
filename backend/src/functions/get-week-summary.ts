@@ -24,12 +24,11 @@ export async function getWeekSummary() {
       .select({
         id: goalCompletions.id,
         title: goals.title,
-        completedAt: goalCompletions.createdAt, //data inteira com horario 
-        completedAtDate: //data apenas com o dia
-          sql/*sql*/`
+        completedAt: goalCompletions.createdAt, //data inteira com horario
+        //data apenas com o dia
+        completedAtDate: sql/*sql*/ `
           DATE(${goalCompletions.createdAt})
-          .as('completedAtDate')
-        `	
+        `.as("completedAtDate"),
       })
       .from(goalCompletions)
       .innerJoin(goals, eq(goals.id, goalCompletions.goalId))
@@ -41,19 +40,43 @@ export async function getWeekSummary() {
       )
   );
 
-  const goalsCompletedByWeekDay = db.$with('goals_completed_by_week_day').as(
+  const goalsCompletedByWeekDay = db.$with("goals_completed_by_week_day").as(
     db
       .select({
         completedAtDate: goalsCompletedInWeek.completedAtDate,
-        completions: sql/*sql*/`
-
-        `
+        completions: sql/*sql*/ `
+          JSON_AGG(
+            JSON_BUILD_OBJECT(
+              'id', ${goalsCompletedInWeek.id},
+              'title', ${goalsCompletedInWeek.title},
+              'completedAt', ${goalsCompletedInWeek.completedAt}
+            )
+          )
+        `.as("completions"),
       })
       .from(goalsCompletedInWeek)
       .groupBy(goalsCompletedInWeek.completedAtDate)
-  )
+  );
+
+  const result = await db
+    .with(goalsCreatedUpToWeek, goalsCompletedInWeek, goalsCompletedByWeekDay)
+    .select({
+      completed: sql/*SQL*/ `
+      (SELECT COUNT(*) FROM ${goalsCompletedInWeek})
+      `.mapWith(Number),
+      total: sql/*SQL*/ `
+      (SELECT SUM(${goalsCreatedUpToWeek.desiredWeeklyFrequency}) FROM ${goalsCreatedUpToWeek})
+      `.mapWith(Number),
+      goalsPerDay: sql/*SQL*/ `
+        JSON_OBJECT_AGG(
+          ${goalsCompletedByWeekDay.completedAtDate},
+          ${goalsCompletedByWeekDay.completions}
+        )
+      `,
+    })
+    .from(goalsCompletedByWeekDay);
 
   return {
-    summary: "teste",
+    summary: result,
   };
 }
