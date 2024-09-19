@@ -58,7 +58,7 @@ export function Summary() {
             <span className='text-zinc-100'>{data?.completed}</span> de 
             <span className='text-zinc-100'>{data?.total}</span> metas nessa semana.
           </span>
-          <span>{completedPercentage}</span>
+          <span>{completedPercentage}%</span>
         </div>
       </div>
 
