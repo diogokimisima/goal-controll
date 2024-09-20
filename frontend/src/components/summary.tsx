@@ -20,8 +20,6 @@ export function Summary() {
     staleTime: 1000 * 60, //60 seconds
   })
 
-  console.log(data)
-
   if (!data) {
     return null
   }
@@ -73,6 +71,8 @@ export function Summary() {
 
         {data.goalsPerDay && Object.entries(data.goalsPerDay).length > 0 ? (
           Object.entries(data.goalsPerDay).map(([date, goals]) => {
+            console.log(data.goalsPerDay)
+
             const weekDay = dayjs(date).format('dddd')
             const formatDate = dayjs(date).format('D [ de ] MMM')
 
@@ -85,7 +85,9 @@ export function Summary() {
 
                 <ul className="flex flex-col gap-3">
                   {goals.map(goal => {
-                    const time = dayjs(goal.completed).format('HH:mm')
+                    const time = dayjs(goal.completedAt).format('HH:mm')
+
+                    console.log(goal.completedAt)
 
                     return (
                       <li key={goal.id} className="flex items-center gap-2">

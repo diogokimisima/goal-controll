@@ -6,7 +6,7 @@ type SummaryResponse = {
       {
         id: string
         title: string
-        completed: string
+        completedAt: string
       }[]
     >
   }
